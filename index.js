@@ -20,9 +20,7 @@ app.use(bodyParser.urlencoded({extended:true}));
 
 
 // go to localhost 3003 --> if it doesnt work --> change to any number
-var server = app.listen(process.env.PORT || 5000, function(){
-    var host = server.address().address
-    var port = server.address().port
+var server = app.listen(process.env.PORT, '0.0.0.0', function(){
     console.log("start!!!!");
   
   });
