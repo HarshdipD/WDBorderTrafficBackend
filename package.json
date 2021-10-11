@@ -1,12 +1,12 @@
 {
-  "name": "database",
-  "version": "1.0.0",
+  "name": "wdbordertraffic-api",
+  "version": "2.0.0",
   "main": "index.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-  "author": "",
-  "license": "GPL",
+  "author": "harshdip and prakort",
+  "license": "GPL-3.0",
   "dependencies": {
     "body-parser": "^1.19.0",
     "cheerio": "^1.0.0-rc.10",
@@ -24,5 +24,14 @@
   "description": "",
   "engines": {
     "node": "10.16.2"
-  }
+  },
+  "devDependencies": {},
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/HarshdipD/WDBorderTrafficBackend.git"
+  },
+  "bugs": {
+    "url": "https://github.com/HarshdipD/WDBorderTrafficBackend/issues"
+  },
+  "homepage": "https://github.com/HarshdipD/WDBorderTrafficBackend#readme"
 }
