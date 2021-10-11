@@ -39,6 +39,7 @@ app.get('/bridge', function (req, res) {
 })
 
 app.get('/data', function (req, res) {
+    console.log(DATA_READY)
     res.send(DATA_READY === undefined ? tempData : [a, DATA_READY]);
 })
 
