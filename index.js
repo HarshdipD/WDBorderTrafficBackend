@@ -11,6 +11,10 @@ let tunnelData;
 let bridgeData;
 let TimeBridge;
 let DATA_READY;
+let a;
+let tempData = {
+    data: 'pending'
+}
 let pendingUpdate = false;
 const url_bridge = 'https://www.ezbordercrossing.com/list-of-border-crossings/michigan/ambassador-bridge/current-traffic/';
 const url_tunnel = 'https://dwtunnel.com/';
@@ -20,23 +24,55 @@ app.use(bodyParser.json({type: 'application/json'}));
 app.use(bodyParser.urlencoded({extended: true}));
 
 app.get('/', function (req, res) {
-    res.send("What are you doing here stalking me... the data is in /data btw");
+    res.send("APIs are in /bridge, /tunnel and /data");
+})
+
+app.get('/tunnel', function (req, res) {
+    tunnel().then((data) => res.send(data));
+})
+
+app.get('/bridge', function (req, res) {
+    bridge().then((data) => {
+        console.log("sending");
+        res.send(data);
+    });
 })
 
 app.get('/data', function (req, res) {
-    start().then(() => res.send(DATA_READY));
+    res.send(DATA_READY === undefined ? tempData : [a, DATA_READY]);
 })
+
 const PORT = process.env.PORT || 3000;
 app.listen(PORT, '0.0.0.0', () => {
+    fetchData();
 });
+
+async function tunnel() {
+    await fetchTunnel();
+    DATA_READY = await JSONTunnelData(tunnelData);
+    return DATA_READY;
+}
+
+async function bridge() {
+    await fetchBridge();
+    DATA_READY = await JSONBridgeData(bridgeData);
+    return DATA_READY;
+}
 
 async function start() {
     // await new Promise((resolve) => resolve(fetchTunnel()));
     await fetchTunnel();
-    await getlastUpdated();
     await fetchBridge();
     DATA_READY = await combinedData(bridgeData, tunnelData);
     return DATA_READY;
+}
+
+async function fetchData() {
+    setInterval(() => {
+        DATA_READY = undefined;
+        DATA_READY = start();
+        a = new Date();
+    }, 60000);
 }
 
 async function fetchTunnel() {
@@ -80,12 +116,10 @@ function fetchBridge() {
                 Array.from(document.querySelectorAll('table.waittimes > tbody > tr > td')).map(element => element.innerText)]
             )
             .then(data => {
-
                 bridgeData = data[1];
-
-                nightmare.proc.disconnect();
-                nightmare.proc.kill();
-                nightmare.ended = true;
+                // nightmare.proc.disconnect();
+                // nightmare.proc.kill();
+                // nightmare.ended = true;
             })
     )
 }
@@ -140,6 +174,77 @@ function getLastUpdateTime(data) {
     });
 
     return _.toString(t);
+}
+
+function JSONTunnelData(T) {
+
+    let result = {
+        canadaToUSA: {
+            car: '',
+            truck: '',
+            nexus: '',
+            time: ''
+        },
+        USAToCanada: {
+            car: '',
+            truck: '',
+            nexus: '',
+            time: ''
+        }
+    };
+
+    if (T != null || pendingUpdate !== true) {
+
+        result.canadaToUSA.car = T.canadaToUSA.car;
+        result.canadaToUSA.truck = T.canadaToUSA.truck;
+        result.canadaToUSA.nexus = T.canadaToUSA.nexus;
+        result.canadaToUSA.time = T.canadaToUSA.time;
+
+        result.USAToCanada.car = T.USAToCanada.car;
+        result.USAToCanada.truck = T.USAToCanada.truck;
+        result.USAToCanada.nexus = T.USAToCanada.nexus;
+        result.USAToCanada.time = T.USAToCanada.time;
+    }
+
+    return result;
+}
+
+function JSONBridgeData(Bridge) {
+
+    let result = {
+        canadaToUSA: {
+            car: '',
+            nexus: '',
+            readyLane: '',
+            commercial: '',
+            fast: ''
+
+        },
+        USAToCanada: {
+            car: '',
+            nexus: '',
+            readyLane: '',
+            commercial: '',
+            fast: ''
+        }
+    };
+
+    if (Bridge != null || pendingUpdate !== true) {
+
+        result.canadaToUSA.car = Bridge[1];
+        result.canadaToUSA.nexus = Bridge[4];
+        result.canadaToUSA.readyLane = Bridge[7];
+        result.canadaToUSA.commercial = Bridge[10];
+        result.canadaToUSA.fast = Bridge[13];
+
+        result.USAToCanada.car = Bridge[2];
+        result.USAToCanada.nexus = Bridge[5];
+        result.USAToCanada.readyLane = Bridge[8];
+        result.USAToCanada.commercial = Bridge[11];
+        result.USAToCanada.fast = Bridge[14];
+    }
+
+    return result;
 }
 
 function combinedData(Bridge, T) {
