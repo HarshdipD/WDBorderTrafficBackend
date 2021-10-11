@@ -73,7 +73,7 @@ async function fetchData() {
         DATA_READY = undefined;
         DATA_READY = start();
         a = new Date();
-    }, 60000);
+    }, 300000);
 }
 
 async function fetchTunnel() {
