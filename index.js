@@ -76,12 +76,12 @@ function fetchBridge() {
             .goto(url_bridge)
             .cookies.clear()
             .wait(1000)
-            .evaluate(function () {
-                return Array.from(document.querySelectorAll('table.waittimes > tbody > tr > td')).map(element => element.innerText);
-            })
+            .evaluate(() => [Array.from(document.querySelectorAll('th')).map(element => element.innerText),
+                Array.from(document.querySelectorAll('table.waittimes > tbody > tr > td')).map(element => element.innerText)]
+            )
             .then(data => {
 
-                bridgeData = data;
+                bridgeData = data[1];
 
                 nightmare.proc.disconnect();
                 nightmare.proc.kill();
