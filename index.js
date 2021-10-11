@@ -19,11 +19,15 @@ const app = express();
 app.use(bodyParser.json({type: 'application/json'}));
 app.use(bodyParser.urlencoded({extended: true}));
 
+app.get('/', function (req, res) {
+    res.send("What are you doing here stalking me... the data is in /data btw");
+})
+
 app.get('/data', function (req, res) {
     start().then(() => res.send(DATA_READY));
 })
-
-app.listen(3003, () => {
+const PORT = process.env.PORT || 3000;
+app.listen(PORT, '0.0.0.0', () => {
 });
 
 async function start() {
