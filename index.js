@@ -17,7 +17,11 @@ app.get('/ready', function (req, res) {
 })
 
 // localhost 3003
-var server = app.listen(process.env.PORT, '0.0.0.0', function () {});
+var server = app.listen(process.env.PORT, '0.0.0.0', function () {
+});
+
+var tunnelData;
+var bridgeData;
 
 // fetch Bridge website
 const url_bridge = 'https://www.ezbordercrossing.com/list-of-border-crossings/michigan/ambassador-bridge/current-traffic/';
@@ -26,8 +30,11 @@ const url_tunnel = 'https://dwtunnel.com/';
 start();
 
 async function start() {
+    // await new Promise((resolve) => resolve(fetchTunnel()));
     await fetchTunnel();
-    await getTime1();
+    await getTime();
+    // await fetchBridge();
+    // await console.log(DATA_READY);
 }
 
 /********************************sample data *********************************/
@@ -84,70 +91,27 @@ var sample = [
 
 // fecth bridge data
 var TimeBrige;
-var Bdata;
 var Tdata;
 var pendingUpdate = false;
 
 var DATA_READY;
 
 async function fetchTunnel() {
-    // Promise.resolve(
 
-    nightmare
-        .goto(url_tunnel)
-        .cookies.clear()
-        .wait(1000)
-        .evaluate(function () {
-            return Array.from(document.querySelectorAll('td')).map(element => element.innerText);
-        })
-        .then(data => {
-            Bdata = data;
-            Tunnel_ready = tunnelJsonFormat(Bdata);
-            // console.log(Tunnel_ready);
-            console.log("helloooooo")
-            // getTime1();
-        });
-    //)
-}
-
-async function getTime1() {
-    // setTimeout(() => console.log("hello"), 3000);
-    console.log("hello")
-}
-
-function fetchBridge() {
-    Promise.resolve(
+    return Promise.resolve(
         nightmare
-            .goto(url_bridge)
+            .goto(url_tunnel)
             .cookies.clear()
             .wait(1000)
-            .evaluate(function () {
-                return Array.from(document.querySelectorAll('td')).map(element => element.innerText);
-            })
+            .evaluate(() => Array.from(document.querySelectorAll('td')).map(element => element.innerText))
             .then(data => {
-                Tdata = data;
-                console.log(Tdata + 'bridge table data')
-
-                //console.log(Tdata);
-
-
-                Bridge_ready = bridgeFormat(Tdata);
-                DATA_READY = combinedData(Bridge_ready, Tunnel_ready);
-                console.log(Bridge_ready);
-                console.log(DATA_READY);
-
-
-                nightmare.proc.disconnect();
-                nightmare.proc.kill();
-                nightmare.ended = true;
-
-
+                tunnelData = tunnelJsonFormat(data);
             })
-    )
+    );
 }
 
 function getTime() {
-    Promise.resolve(
+    return Promise.resolve(
         nightmare
             .goto(url_bridge)
             .cookies.clear()
@@ -156,11 +120,39 @@ function getTime() {
                 return Array.from(document.querySelectorAll('th')).map(element => element.innerText);
             })
             .then(data => {
+                console.log(data)
 
-
-                fetchBridge();
                 var dataTime = findTime(data);
-                TimeBrige = dataTime;
+                console.log(dataTime)
+                // TimeBrige = dataTime;
+            })
+    )
+}
+
+function fetchBridge() {
+    return Promise.resolve(
+        nightmare
+            .goto(url_bridge)
+            .cookies.clear()
+            .wait(1000)
+            .evaluate(function () {
+                return Array.from(document.querySelectorAll('td')).map(element => element.innerText);
+            })
+            .then(data => {
+
+                console.log(data);
+
+
+                // Bridge_ready = bridgeFormat(Tdata);
+                // DATA_READY = combinedData(Bridge_ready, tunnelData);
+                // console.log(Bridge_ready);
+                // console.log(DATA_READY);
+
+
+                nightmare.proc.disconnect();
+                nightmare.proc.kill();
+                nightmare.ended = true;
+
 
             })
     )
@@ -175,7 +167,11 @@ function findTime(data) {
             pendingUpdate = pending;
 
         }
-        t = element.match(/[0-9]+:[0-9]+/g);
+        try {
+            t = element.match(/[0-9]+:[0-9]+/g);
+        } catch (error) {
+            console.log(error + "all is good i habdled it");
+        }
         //console.log(t+'&&&&&&&');
 
     });
@@ -315,40 +311,41 @@ function bridgeFormat(data) {
 
     // global array 
     var Gates = [];
+    console.log(data);
     // initial temp var
 
-    for (var i = 0; i < 15; i++) {
-        var temp = data[i];
-        //console.log(data.length);
-        if (temp != "FAST" && temp != "Ready Lane") {
-            if ((i % 3 == 0)) {
-                // get lane name
-                var gate = {
-                    "lane": "",
-                    "details": "",
-
-                };
-                gate.lane = data[i];
-            } else if (i > 0 && (i - 1) % 3 == 0) {
-
-                // get details to more details by calling the the function 
-                var details = detailsString(data[i]);
-                gate.details = details;
-            } else if (i > 0 && (i + 1) % 3 == 0) {
-
-                // get enter canada status
-                var eCanada = data[i].replace(/minutes/g, 'mn');
-
-                //console.log(eCanada+'enter canada');
-                // add into object
-                gate.enterCanada = eCanada;
-                // push to array to start a new object
-                Gates.push(gate);
-            }
-        } else {
-            i += 2;
-        }
-    }
+    // for (var i = 0; i < 15; i++) {
+    //     var temp = data[i];
+    //     //console.log(data.length);
+    //     if (temp !== "FAST" && temp !== "Ready Lane") {
+    //         if ((i % 3 === 0)) {
+    //             // get lane name
+    //             var gate = {
+    //                 "lane": "",
+    //                 "details": "",
+    //
+    //             };
+    //             gate.lane = data[i];
+    //         } else if (i > 0 && (i - 1) % 3 === 0) {
+    //
+    //             // get details to more details by calling the the function
+    //             var details = detailsString(data[i]);
+    //             gate.details = details;
+    //         } else if (i > 0 && (i + 1) % 3 === 0) {
+    //
+    //             // get enter canada status
+    //             var eCanada = data[i].replace(/minutes/g, 'mn');
+    //
+    //             //console.log(eCanada+'enter canada');
+    //             // add into object
+    //             gate.enterCanada = eCanada;
+    //             // push to array to start a new object
+    //             Gates.push(gate);
+    //         }
+    //     } else {
+    //         i += 2;
+    //     }
+    // }
 
 
     //console.log('this is gates'+Gates);
